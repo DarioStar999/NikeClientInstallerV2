@@ -1,1 +1,1 @@
-python -m PyInstaller --onefile --icon="C:\Users\vaghi\Desktop\nike client gui\src\images\logo.ico" --windowed main.py
+python -m PyInstaller --onefile --icon="src\images\logo.ico" --windowed main.py
