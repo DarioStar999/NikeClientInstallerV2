@@ -4,10 +4,11 @@ import subprocess
 import threading
 import textwrap
 import json
+import time
 
 username = os.getlogin()
 app = tk.CTk()
-app.title(f" benvenuto")
+app.title(f"{username} benvenuto")
 app.geometry("300x200")
 app.grid_columnconfigure(0, weight=1)
 app.resizable(False, False)
@@ -71,11 +72,23 @@ def show_settings():
         for mod in data["modConfigList"]:
             if mod["name"] == choice:
                 mod["toggled"] = not mod["toggled"]
+                toggled_value = mod["toggled"]  # Salvo valore per la notifica
+                break
+
         with open(location, "w") as settings:
             json.dump(data, settings, indent=4)
+
+        # === Notifica elegante ===
+        notif = tk.CTkLabel(settingsAPP, text=f"Mod '{choice}' toggled: {toggled_value}",
+                            fg_color="#2ecc71", text_color="white", corner_radius=8, font=("Arial", 14),
+                            width=250, height=30)
+        notif.place(relx=0.5, rely=0.85, anchor="center")  # Notifica centrata in basso
+
+        # Dopo 3 secondi, la rimuove
+        settingsAPP.after(3000, notif.destroy)
     exit_button = tk.CTkButton(settingsAPP, text="Exit", command=exitSettings)
     exit_button.grid(column=0, row=2, sticky="w")
-    settingoptionmenu = tk.CTkOptionMenu(settingsAPP, values=["FPS", "ToggleSprint"], command=settingSet)
+    settingoptionmenu = tk.CTkOptionMenu(settingsAPP, values=["FPS", "ToggleSprint", "ToggleSneak", "Keystrokes", "Armor Status", "Fullbright", "Snaplook", "Coordinates", "Server Address", "Ping", "CPS", "Speed Indicator", "Animation", "Freelook", "Crosshair", "Motionblur", "BlockOverlay"], command=settingSet)
     settingoptionmenu.grid(column=0, row=1, sticky="w")
     settingsAPP.mainloop()
 
