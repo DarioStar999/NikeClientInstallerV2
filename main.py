@@ -5,6 +5,7 @@ import threading
 import textwrap
 import json
 import time
+import requests
 
 username = os.getlogin()
 app = tk.CTk()
@@ -13,44 +14,93 @@ app.geometry("300x200")
 app.grid_columnconfigure(0, weight=1)
 app.resizable(False, False)
 
+def download_file_con_barra(url, save_path, progress_bar, current_index, total_files):
+    filename = os.path.basename(save_path)
+    if "install.ps1" in filename:
+        save_path = os.path.join(os.environ["USERPROFILE"], "Downloads", filename)
+    response = requests.get(url, stream=True)
+    total_length = int(response.headers.get('content-length', 0))
+    downloaded = 0
+    with open(save_path, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=4096):
+            if chunk:
+                f.write(chunk)
+                downloaded += len(chunk)
+                progress = ((current_index - 1) + downloaded / total_length) / total_files
+                progress_bar.set(progress)
+    if "install.ps1" in filename:
+        subprocess.Popen([
+            "powershell.exe",
+            "-ExecutionPolicy", "Bypass",
+            "-File", save_path
+        ])
+
 def download_premium():
-    script = textwrap.dedent("""\
-        set "minecraftpath=C:\\Users\\%username%\\AppData\\Roaming\\.minecraft"
-        set "versionpath=%minecraftpath%\\versions"
-        mkdir "%versionpath%\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9" > nul
-        mkdir "%minecraftpath%\\libraries\\net\\minecraftforge" > nul
-        mkdir "%minecraftpath%\\libraries\\net\\minecraftforge\\forge" > nul
-        mkdir "%minecraftpath%\\libraries\\net\\minecraftforge\\forge\\1.8.9-11.15.1.2318-1.8.9" > nul
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/1.8.9-forge1.8.9-11.15.1.2318-1.8.9.jar' -OutFile '%versionpath%\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/1.8.9-forge1.8.9-11.15.1.2318-1.8.9.json' -OutFile '%versionpath%\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9.json' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/1.8.9.jar' -OutFile '%versionpath%\\1.8.9-forge1.8.9-11.15.1.2318-1.8.9\\1.8.9.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/logs.txt' -OutFile '%minecraftpath%\\NikeClient\\mods\\logs.txt' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/forge-1.8.9-11.15.1.2318-1.8.9.jar' -OutFile '%minecraftpath%\\libraries\\net\\minecraftforge\\forge\\1.8.9-11.15.1.2318-1.8.9\\forge-1.8.9-11.15.1.2318-1.8.9.jar' }"
-        mkdir "%minecraftpath%\\NikeClient" > nul
-        mkdir "%minecraftpath%\\NikeClient\\mods" > nul
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/install.ps1' -OutFile 'C:\\Users\\%username%\\Downloads\\install.ps1' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/NikeClient.jar' -OutFile '%minecraftpath%\\NikeClient\\mods\\NikeClient.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/Cosmetics.jar' -OutFile '%minecraftpath%\\NikeClient\\mods\\Cosmetics.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/FpsBoost.jar' -OutFile '%minecraftpath%\\NikeClient\\mods\\FpsBoost.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/gui.jar' -OutFile '%minecraftpath%\\NikeClient\\mods\\gui.jar' }"
-    """).lstrip()
-    process = subprocess.Popen(["cmd.exe"], stdin=subprocess.PIPE, shell=False)
-    process.communicate(input=script.encode("utf-8"))
-    download_folder = os.path.join(os.environ["USERPROFILE"], "Downloads")
-    ps1_script = os.path.join(download_folder, "install.ps1")
-    process2 = subprocess.Popen(["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", ps1_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    process2.communicate(input=script.encode("utf-8"))
+    files = [
+        ("https://dariostar999.github.io/assets/src/1.8.9-forge1.8.9-11.15.1.2318-1.8.9.jar", "1.8.9-forge.jar"),
+        ("https://dariostar999.github.io/assets/src/1.8.9-forge1.8.9-11.15.1.2318-1.8.9.json", "1.8.9-forge.json"),
+        ("https://dariostar999.github.io/assets/src/1.8.9.jar", "1.8.9.jar"),
+        ("https://dariostar999.github.io/assets/src/logs.txt", "logs.txt"),
+        ("https://dariostar999.github.io/assets/src/forge-1.8.9-11.15.1.2318-1.8.9.jar", "forge.jar"),
+        ("https://dariostar999.github.io/assets/src/install.ps1", "install.ps1"),
+        ("https://dariostar999.github.io/assets/src/NikeClient.jar", "NikeClient.jar"),
+        ("https://dariostar999.github.io/assets/src/Cosmetics.jar", "Cosmetics.jar"),
+        ("https://dariostar999.github.io/assets/src/FpsBoost.jar", "FpsBoost.jar"),
+        ("https://dariostar999.github.io/assets/src/gui.jar", "gui.jar")
+    ]
+    progress_window = tk.CTkToplevel(app)
+    progress_window.title("Download in corso...")
+    progress_window.geometry("300x100")
+    progress_label = tk.CTkLabel(progress_window, text="Download in corso...")
+    progress_label.pack(pady=10)
+    progress_bar = tk.CTkProgressBar(progress_window, width=250)
+    progress_bar.set(0)
+    progress_bar.pack(pady=5)
+    mcpath = os.path.join(os.environ["APPDATA"], ".minecraft")
+    mods_path = os.path.join(mcpath, "NikeClient", "mods")
+    os.makedirs(mods_path, exist_ok=True)
+    total_files = len(files)
+    for index, (url, filename) in enumerate(files, start=1):
+        if "install.ps1" in filename:
+            save_path = os.path.join(os.environ["USERPROFILE"], "Downloads", filename)
+        elif filename in ["1.8.9-forge.jar", "1.8.9-forge.json", "1.8.9.jar"]:
+            save_path = os.path.join(mcpath, "versions", "1.8.9-forge", filename)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        elif filename == "forge.jar":
+            save_path = os.path.join(mcpath, "libraries", "net", "minecraftforge", "forge", "1.8.9-11.15.1.2318-1.8.9", filename)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        elif filename == "logs.txt":
+            save_path = os.path.join(mods_path, filename)
+        else:
+            save_path = os.path.join(mods_path, filename)
+        download_file_con_barra(url, save_path, progress_bar, index, total_files)
+    progress_label.configure(text="Download completato ✅")
+    progress_bar.set(1.0)
 
 def download_spremium():
-    script = textwrap.dedent(r"""\
-        set "minecraftpath=C:\Users\%username%\AppData\Roaming\.minecraft"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/NikeClient.jar' -OutFile '%minecraftpath%\mods\NikeClient.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/Cosmetics.jar' -OutFile '%minecraftpath%\mods\Cosmetics.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/FpsBoost.jar' -OutFile '%minecraftpath%\mods\FpsBoost.jar' }"
-        powershell -Command "& { Invoke-WebRequest -Uri 'https://dariostar999.github.io/assets/src/gui.jar' -OutFile '%minecraftpath%\mods\gui.jar' }"
-    """).lstrip() + "\n"
-    process = subprocess.Popen(["cmd.exe"], stdin=subprocess.PIPE, shell=False)
-    process.communicate(input=script.encode("utf-8"))
+    files = [
+        ("https://dariostar999.github.io/assets/src/NikeClient.jar", "NikeClient.jar"),
+        ("https://dariostar999.github.io/assets/src/Cosmetics.jar", "Cosmetics.jar"),
+        ("https://dariostar999.github.io/assets/src/FpsBoost.jar", "FpsBoost.jar"),
+        ("https://dariostar999.github.io/assets/src/gui.jar", "gui.jar")
+    ]
+    progress_window = tk.CTkToplevel(app)
+    progress_window.title("Download S-Premium in corso...")
+    progress_window.geometry("300x100")
+    progress_label = tk.CTkLabel(progress_window, text="Download in corso...")
+    progress_label.pack(pady=10)
+    progress_bar = tk.CTkProgressBar(progress_window, width=250)
+    progress_bar.set(0)
+    progress_bar.pack(pady=5)
+    mcpath = os.path.join(os.environ["APPDATA"], ".minecraft")
+    mods_path = os.path.join(mcpath, "mods")
+    os.makedirs(mods_path, exist_ok=True)
+    total_files = len(files)
+    for index, (url, filename) in enumerate(files, start=1):
+        save_path = os.path.join(mods_path, filename)
+        download_file_con_barra(url, save_path, progress_bar, index, total_files)
+    progress_label.configure(text="Download completato ✅")
+    progress_bar.set(1.0)
 
 def show_settings():
     username = os.getlogin()
