@@ -29,7 +29,7 @@
 </ul>
 
 <h2>Example Screenshot</h2>
-<img src="https://i.imgur.com/uuvS4XC" alt="App Screenshot" width="400"/>
+<img src="https://i.imgur.com/2SGaM4e_d.webp?maxwidth=760&fidelity=grand" alt="App Screenshot" width="400"/>
 
 <h2>Notes</h2>
 <p>Make sure Minecraft is installed and you have access to your <code>%APPDATA%\.minecraft</code> directory. This app automatically handles folder creation and places mods accordingly.</p>
