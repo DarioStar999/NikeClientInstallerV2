@@ -1,4 +1,4 @@
-<h1>🧩 Custom Minecraft Mod Downloader</h1>
+<h1>🧩 NikeClient Installer</h1>
 
 <p>A user-friendly 🖥️ desktop application built with <strong>CustomTkinter</strong> that lets you easily download Minecraft mods 🛠️ and manage your mod settings ⚙️.</p>
 
