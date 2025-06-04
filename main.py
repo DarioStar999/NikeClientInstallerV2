@@ -127,14 +127,12 @@ def show_settings():
 
         with open(location, "w") as settings:
             json.dump(data, settings, indent=4)
-
-        # === Notifica elegante ===
+            
         notif = tk.CTkLabel(settingsAPP, text=f"Mod '{choice}' toggled: {toggled_value}",
                             fg_color="#2ecc71", text_color="white", corner_radius=8, font=("Arial", 14),
                             width=250, height=30)
-        notif.place(relx=0.5, rely=0.85, anchor="center")  # Notifica centrata in basso
+        notif.place(relx=0.5, rely=0.85, anchor="center")
 
-        # Dopo 3 secondi, la rimuove
         settingsAPP.after(3000, notif.destroy)
     exit_button = tk.CTkButton(settingsAPP, text="Exit", command=exitSettings)
     exit_button.grid(column=0, row=2, sticky="w")
