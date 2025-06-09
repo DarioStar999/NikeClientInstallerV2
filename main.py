@@ -2,17 +2,24 @@ import customtkinter as tk
 import os
 import subprocess
 import threading
-import textwrap
 import json
-import time
 import requests
 
 username = os.getlogin()
+
 app = tk.CTk()
-app.title(f"{username} benvenuto")
-app.geometry("300x200")
-app.grid_columnconfigure(0, weight=1)
+app.title(f"Benvenuto {username}")
+app.geometry("500x400")
 app.resizable(False, False)
+
+tk.set_appearance_mode("dark")
+tk.set_default_color_theme("green")
+
+frame = tk.CTkFrame(app, corner_radius=15)
+frame.pack(expand=True, fill="both", padx=20, pady=20)
+
+title = tk.CTkLabel(frame, text="NikeClient Launcher", font=("Arial", 22, "bold"))
+title.pack(pady=(10, 20))
 
 def download_file_con_barra(url, save_path, progress_bar, current_index, total_files):
     filename = os.path.basename(save_path)
@@ -50,12 +57,12 @@ def download_premium():
     ]
     progress_window = tk.CTkToplevel(app)
     progress_window.title("Download in corso...")
-    progress_window.geometry("300x100")
-    progress_label = tk.CTkLabel(progress_window, text="Download in corso...")
-    progress_label.pack(pady=10)
-    progress_bar = tk.CTkProgressBar(progress_window, width=250)
-    progress_bar.set(0)
-    progress_bar.pack(pady=5)
+    progress_window.geometry("350x120")
+    label = tk.CTkLabel(progress_window, text="Download in corso...")
+    label.pack(pady=10)
+    progress = tk.CTkProgressBar(progress_window, width=280)
+    progress.set(0)
+    progress.pack()
     mcpath = os.path.join(os.environ["APPDATA"], ".minecraft")
     mods_path = os.path.join(mcpath, "NikeClient", "mods")
     os.makedirs(mods_path, exist_ok=True)
@@ -69,13 +76,11 @@ def download_premium():
         elif filename == "forge.jar":
             save_path = os.path.join(mcpath, "libraries", "net", "minecraftforge", "forge", "1.8.9-11.15.1.2318-1.8.9", filename)
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        elif filename == "logs.txt":
-            save_path = os.path.join(mods_path, filename)
         else:
             save_path = os.path.join(mods_path, filename)
-        download_file_con_barra(url, save_path, progress_bar, index, total_files)
-    progress_label.configure(text="Download completato ✅")
-    progress_bar.set(1.0)
+        download_file_con_barra(url, save_path, progress, index, total_files)
+    label.configure(text="Download completato ✅")
+    progress.set(1.0)
 
 def download_spremium():
     files = [
@@ -86,21 +91,20 @@ def download_spremium():
     ]
     progress_window = tk.CTkToplevel(app)
     progress_window.title("Download S-Premium in corso...")
-    progress_window.geometry("300x100")
-    progress_label = tk.CTkLabel(progress_window, text="Download in corso...")
-    progress_label.pack(pady=10)
-    progress_bar = tk.CTkProgressBar(progress_window, width=250)
-    progress_bar.set(0)
-    progress_bar.pack(pady=5)
-    mcpath = os.path.join(os.environ["APPDATA"], ".minecraft")
-    mods_path = os.path.join(mcpath, "mods")
+    progress_window.geometry("350x120")
+    label = tk.CTkLabel(progress_window, text="Download in corso...")
+    label.pack(pady=10)
+    progress = tk.CTkProgressBar(progress_window, width=280)
+    progress.set(0)
+    progress.pack()
+    mods_path = os.path.join(os.environ["APPDATA"], ".minecraft", "mods")
     os.makedirs(mods_path, exist_ok=True)
     total_files = len(files)
     for index, (url, filename) in enumerate(files, start=1):
         save_path = os.path.join(mods_path, filename)
-        download_file_con_barra(url, save_path, progress_bar, index, total_files)
-    progress_label.configure(text="Download completato ✅")
-    progress_bar.set(1.0)
+        download_file_con_barra(url, save_path, progress, index, total_files)
+    label.configure(text="Download completato ✅")
+    progress.set(1.0)
 
 def show_settings():
     username = os.getlogin()
@@ -122,22 +126,23 @@ def show_settings():
         for mod in data["modConfigList"]:
             if mod["name"] == choice:
                 mod["toggled"] = not mod["toggled"]
-                toggled_value = mod["toggled"]  # Salvo valore per la notifica
+                toggled_value = mod["toggled"]
                 break
-
         with open(location, "w") as settings:
             json.dump(data, settings, indent=4)
-            
         notif = tk.CTkLabel(settingsAPP, text=f"Mod '{choice}' toggled: {toggled_value}",
                             fg_color="#2ecc71", text_color="white", corner_radius=8, font=("Arial", 14),
                             width=250, height=30)
         notif.place(relx=0.5, rely=0.85, anchor="center")
-
         settingsAPP.after(3000, notif.destroy)
-    exit_button = tk.CTkButton(settingsAPP, text="Exit", command=exitSettings)
-    exit_button.grid(column=0, row=2, sticky="w")
-    settingoptionmenu = tk.CTkOptionMenu(settingsAPP, values=["FPS", "ToggleSprint", "ToggleSneak", "Keystrokes", "Armor Status", "Fullbright", "Snaplook", "Coordinates", "Server Address", "Ping", "CPS", "Speed Indicator", "Animation", "Freelook", "Crosshair", "Motionblur", "BlockOverlay"], command=settingSet)
-    settingoptionmenu.grid(column=0, row=1, sticky="w")
+
+    tk.CTkOptionMenu(settingsAPP, values=[
+        "FPS", "ToggleSprint", "ToggleSneak", "Keystrokes", "Armor Status", "Fullbright",
+        "Snaplook", "Coordinates", "Server Address", "Ping", "CPS", "Speed Indicator",
+        "Animation", "Freelook", "Crosshair", "Motionblur", "BlockOverlay"
+    ], command=settingSet).grid(column=0, row=1, sticky="w", padx=10, pady=10)
+
+    tk.CTkButton(settingsAPP, text="Esci", command=exitSettings).grid(column=0, row=2, sticky="w", padx=10)
     settingsAPP.mainloop()
 
 def settings_thread():
@@ -146,15 +151,27 @@ def settings_thread():
 def dowload(choice):
     if choice == "senza premium":
         threading.Thread(target=download_spremium, daemon=True).start()
-        optionpremiumSP.destroy()
     elif choice == "premium":
         threading.Thread(target=download_premium, daemon=True).start()
-        optionpremiumSP.destroy()
 
-optionpremiumSP = tk.CTkOptionMenu(app, values=["premium", "senza premium"], command=dowload)
-optionpremiumSP.grid(column=0, row=0, columnspan=2, pady=1)
-optionpremiumSP.set("seleziona(solo una volta)")
-settings_button = tk.CTkButton(app, text="Settings", command=settings_thread)
-settings_button.grid(row=2, column=0, columnspan=2, pady=1)
+def start_launcher():
+    launcher_path = r"C:\Program Files (x86)\Minecraft Launcher\MinecraftLauncher.exe"
+    if os.path.exists(launcher_path):
+        subprocess.Popen([launcher_path])
+    else:
+        tk.CTkLabel(frame, text="Launcher non trovato ❌", text_color="red").pack(pady=(5, 0))
+
+optionmenu = tk.CTkOptionMenu(frame, values=["premium", "senza premium"], command=dowload)
+optionmenu.pack(pady=10)
+optionmenu.set("Seleziona versione")
+
+tk.CTkButton(frame, text="⚙️ Impostazioni", command=settings_thread).pack(pady=(5, 5))
+
+tk.CTkButton(frame, text="⬇️ Scarica", command=lambda: dowload(optionmenu.get())).pack(pady=(0, 10))
+
+tk.CTkButton(frame, text="▶ Avvia Minecraft", command=start_launcher, fg_color="#27ae60", hover_color="#219150").pack(pady=(5, 10))
+
+footer = tk.CTkLabel(frame, text="Made with ❤️ by te", font=("Arial", 10), text_color="gray")
+footer.pack(side="bottom", pady=(10, 5))
 
 app.mainloop()
